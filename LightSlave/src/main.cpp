@@ -95,7 +95,14 @@ void loop()
 
 void processSerialCommand()
 {
-  serial.printOutSerialData();
+  String command = serial.getCommand();
+  String *arguments = serial.getArguments();
+
+  Serial.println(String(command));
+  for (size_t i = 0; i < 3; i++)
+  {
+    Serial.println("Arguments: " + String(arguments[i]));
+  }
 }
 
 //Executes the program changes with the commands that were delivered by the IR module

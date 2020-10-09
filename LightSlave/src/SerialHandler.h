@@ -17,6 +17,8 @@ public:
     void parseCommands(String data);
     bool dataAvailable();
     void printOutSerialData();
+    String getCommand();
+    String* getArguments();
 };
 
 #endif // SERIALHANDLER_H_

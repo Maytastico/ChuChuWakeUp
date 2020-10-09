@@ -94,3 +94,11 @@ void SerialHandler::printOutSerialData(){
         Serial.println("Arguments: " + String(this->arguments[i]));
     }
 }
+
+String* SerialHandler::getArguments(){
+    return this->arguments;
+}
+
+String SerialHandler::getCommand(){
+    return this->command;
+}
