@@ -61,105 +61,15 @@ void setup()
   pixels.setupARGB(loadBrightness, loadColor);
 }
 
+void processIRCommand();
+void processSerialCommand();
+
 void loop()
 {
   // receive and decode IR data
   if (myIr.isDataReady())
   {
-    uint32_t data = myIr.getEncodedData();
-
-    // Command : Change to green color
-    if (data == TOGGLE_POWER)
-    {
-      pixels.toggleStripe();
-    }
-    else if (data == INCREASE_SPEED)
-    {
-      programMgr.setUpdateRateRelative(-10);
-    }
-    else if (data == DEINCREASE_SPEED)
-    {
-      programMgr.setUpdateRateRelative(10);
-    }
-    else if (data == GREEN_COLOR)
-    {
-      // store and request a change of color
-      myStore.storeColor(pixels.Color(0, 255, 0));
-      pixels.changeColor(0, 255, 0);
-    }
-    // Command : Change to red color
-    else if (data == RED_COLOR)
-    {
-      // store and request a change of color
-      myStore.storeColor(pixels.Color(255, 0, 0));
-      pixels.changeColor(255, 0, 0);
-    }
-    // Command : Changes color to blue
-    else if (data == BLUE_COLOR)
-    {
-      // store and request a change of color
-      myStore.storeColor(pixels.Color(0, 0, 255));
-      pixels.changeColor(0, 0, 255);
-    }
-    // Command : Changes color to Orange
-    else if (data == ORAGNE_COLOR)
-    {
-      // store and request a change of color
-      myStore.storeColor(0xFFBF00);
-      pixels.changeColor(0xFFBF00);
-    }
-    // Command : Changes color to blue
-    else if (data == LIME_COLOR)
-    {
-      // store and request a change of color
-      myStore.storeColor(pixels.Color(10, 223, 100));
-      pixels.changeColor(10, 223, 100);
-    }
-    // Command : Changes color to light blue
-    else if (data == LIGHT_BLUE_COLOR)
-    {
-      // store and request a change of color
-      myStore.storeColor(pixels.Color(27, 229, 229));
-      pixels.changeColor(27, 229, 229);
-    } // Command : Changes color to white
-    else if (data == WHITE)
-    {
-      // store and request a change of color
-      myStore.storeColor(pixels.Color(255, 255, 255));
-      pixels.changeColor(255, 255, 255);
-    }
-    // Command : Increase brightness
-    else if (data == BRIGHT_UP)
-    {
-      // increase brightness, after 5s store value to EEPROM
-      pixels.setBrightnessRelative(BRIGHTNESS_OFFSET);
-    }
-    // Command : Decrease brightness
-    else if (data == BRIGHT_DOWN)
-    {
-      // decrease brightness, after 5s store value to EEPROM
-      pixels.setBrightnessRelative(-BRIGHTNESS_OFFSET);
-    }
-    // Command : Decrease brightness
-    else if (data == CHANGE_TO_RAINBOW)
-    {
-      if (programMgr.getCurrentProgram() == RAINBOW)
-      {
-        programMgr.setProgram(SET_MANUEL_COLOR);
-        pixels.changeColor(myStore.getSavedColor(), true);
-        pixels.loop();
-      }
-      else
-      {
-        programMgr.setProgram(RAINBOW);
-      }
-    }
-    else
-    {
-      Serial.print("IR-Data : ");
-      Serial.print(data, HEX);
-      Serial.println("");
-    }
+    processIRCommand();
   } // End  if (myIr.isDataReady())
 
   if (programMgr.getCurrentProgram() == SET_MANUEL_COLOR)
@@ -176,4 +86,113 @@ void loop()
   }
 
   serial.loop();
+  if (serial.dataAvailable() == true)
+  {
+    processSerialCommand();
+  }
+
 } // end of loop
+
+void processSerialCommand()
+{
+  serial.printOutSerialData();
+}
+
+//Executes the program changes with the commands that were delivered by the IR module
+void processIRCommand()
+{
+  uint32_t data = myIr.getEncodedData();
+
+  // Command : Change to green color
+  if (data == TOGGLE_POWER)
+  {
+    pixels.toggleStripe();
+  }
+  else if (data == INCREASE_SPEED)
+  {
+    programMgr.setUpdateRateRelative(-10);
+  }
+  else if (data == DEINCREASE_SPEED)
+  {
+    programMgr.setUpdateRateRelative(10);
+  }
+  else if (data == GREEN_COLOR)
+  {
+    // store and request a change of color
+    myStore.storeColor(pixels.Color(0, 255, 0));
+    pixels.changeColor(0, 255, 0);
+  }
+  // Command : Change to red color
+  else if (data == RED_COLOR)
+  {
+    // store and request a change of color
+    myStore.storeColor(pixels.Color(255, 0, 0));
+    pixels.changeColor(255, 0, 0);
+  }
+  // Command : Changes color to blue
+  else if (data == BLUE_COLOR)
+  {
+    // store and request a change of color
+    myStore.storeColor(pixels.Color(0, 0, 255));
+    pixels.changeColor(0, 0, 255);
+  }
+  // Command : Changes color to Orange
+  else if (data == ORAGNE_COLOR)
+  {
+    // store and request a change of color
+    myStore.storeColor(0xFFBF00);
+    pixels.changeColor(0xFFBF00);
+  }
+  // Command : Changes color to blue
+  else if (data == LIME_COLOR)
+  {
+    // store and request a change of color
+    myStore.storeColor(pixels.Color(10, 223, 100));
+    pixels.changeColor(10, 223, 100);
+  }
+  // Command : Changes color to light blue
+  else if (data == LIGHT_BLUE_COLOR)
+  {
+    // store and request a change of color
+    myStore.storeColor(pixels.Color(27, 229, 229));
+    pixels.changeColor(27, 229, 229);
+  } // Command : Changes color to white
+  else if (data == WHITE)
+  {
+    // store and request a change of color
+    myStore.storeColor(pixels.Color(255, 255, 255));
+    pixels.changeColor(255, 255, 255);
+  }
+  // Command : Increase brightness
+  else if (data == BRIGHT_UP)
+  {
+    // increase brightness, after 5s store value to EEPROM
+    pixels.setBrightnessRelative(BRIGHTNESS_OFFSET);
+  }
+  // Command : Decrease brightness
+  else if (data == BRIGHT_DOWN)
+  {
+    // decrease brightness, after 5s store value to EEPROM
+    pixels.setBrightnessRelative(-BRIGHTNESS_OFFSET);
+  }
+  // Command : Decrease brightness
+  else if (data == CHANGE_TO_RAINBOW)
+  {
+    if (programMgr.getCurrentProgram() == RAINBOW)
+    {
+      programMgr.setProgram(SET_MANUEL_COLOR);
+      pixels.changeColor(myStore.getSavedColor(), true);
+      pixels.loop();
+    }
+    else
+    {
+      programMgr.setProgram(RAINBOW);
+    }
+  }
+  else
+  {
+    Serial.print("IR-Data : ");
+    Serial.print(data, HEX);
+    Serial.println("");
+  }
+}

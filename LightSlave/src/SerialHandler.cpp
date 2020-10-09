@@ -1,7 +1,7 @@
 #include <SerialHandler.h>
 #include <string.h>
 
-uint8_t SerialHandler::loop()
+void SerialHandler::loop()
 {
     if (Serial.available() > 1)
     {
@@ -12,14 +12,12 @@ uint8_t SerialHandler::loop()
         }
         else
         {
-            if(SerialHandler::parseCommands(incomingData)>0){
-                return 1;
-            }
+            SerialHandler::parseCommands(incomingData);
         }
     }
 }
 
-uint8_t SerialHandler::parseCommands(String dataFromInterface)
+void SerialHandler::parseCommands(String dataFromInterface)
 {
     int n = dataFromInterface.length();
     char data[n + 1];
@@ -44,8 +42,7 @@ uint8_t SerialHandler::parseCommands(String dataFromInterface)
             flag = ARGUMENTS;
             continue;
         }
-
-        if (data[i] == ',' && flag == ARGUMENTS)
+        else if (data[i] == ',' && flag == ARGUMENTS)
         {
             if (argumentCounter <= 3)
             {
@@ -62,23 +59,38 @@ uint8_t SerialHandler::parseCommands(String dataFromInterface)
         {
             command += data[i];
         }
-
-        if (flag == ARGUMENTS)
+        else if (flag == ARGUMENTS)
         {
             arguments[argumentCounter] += data[i];
         }
     }
 
-    SerialHandler::command = command;
+    this->command = command;
     for (size_t i = 0; i < 3; i++)
     {
-        SerialHandler::arguments[i] = arguments[i];
+        this->arguments[i] = arguments[i];
     }
-    return 1;
+
+    
+
+    this->commandAvailable = true;
+}
+
+bool SerialHandler::dataAvailable()
+{
+    if (this->commandAvailable == true)
+    {
+        this->commandAvailable = false;
+        return true;
+    }
+    return false;
+}
+
+void SerialHandler::printOutSerialData(){
     /* Debugger*/
-    /* Serial.println("Command: " + String(SerialHandler::command));
+    Serial.println("Command: " + String(this->command));
     for (size_t i = 0; i < 3; i++)
     {
-        Serial.println("Arguments: " + String(SerialHandler::arguments[i]));
-    } */ 
+        Serial.println("Arguments: " + String(this->arguments[i]));
+    }
 }

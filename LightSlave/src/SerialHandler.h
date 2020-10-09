@@ -9,11 +9,14 @@ class SerialHandler
 private:
     String command;
     String arguments[3];
+    bool commandAvailable;
 
 public:
     SerialHandler(){};
-    uint8_t loop();
-    uint8_t parseCommands(String data);
+    void loop();
+    void parseCommands(String data);
+    bool dataAvailable();
+    void printOutSerialData();
 };
 
 #endif // SERIALHANDLER_H_
