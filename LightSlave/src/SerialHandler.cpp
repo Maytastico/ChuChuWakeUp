@@ -5,7 +5,7 @@ void SerialHandler::loop()
 {
     if (Serial.available() > 1)
     {
-        String incomingData = Serial.readString();
+        String incomingData = Serial.readStringUntil('\n');
         if (incomingData.length() < 5)
         {
             Serial.println("Not valid!");

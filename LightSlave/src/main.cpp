@@ -72,6 +72,12 @@ void loop()
     processIRCommand();
   } // End  if (myIr.isDataReady())
 
+  serial.loop();
+  if (serial.dataAvailable() == true)
+  {
+    processSerialCommand();
+  }
+
   if (programMgr.getCurrentProgram() == SET_MANUEL_COLOR)
     // execution of the ARGB Stripe state machine
     pixels.loop();
@@ -85,18 +91,56 @@ void loop()
     pixels.resetStoringRequest();
   }
 
-  serial.loop();
-  if (serial.dataAvailable() == true)
-  {
-    processSerialCommand();
-  }
-
 } // end of loop
 
 void processSerialCommand()
 {
   String command = serial.getCommand();
   String *arguments = serial.getArguments();
+
+  if (command == "setColor" || command == "setColorFade")
+  {
+    int r, g, b;
+    r = arguments[0].toInt();
+    g = arguments[1].toInt();
+    b = arguments[2].toInt();
+    if (r == 0 && g == 0 && b == 0)
+    {
+      Serial.println("At least one argument should containe a number greater then zero");
+      return;
+    }
+    else if (r > 255 || g > 255 || b > 255)
+    {
+      Serial.print("Arguments shouln't be greater then 255");
+      return;
+    }
+
+    //Serial.println("Red: " + String(r) + ", Green: " + String(g) + ", Blue: " + String(b));
+    programMgr.setProgram(SET_MANUEL_COLOR);
+    if (command == "setColor")
+      pixels.setColor(r, g, b);
+    else if (command == "setColorFade")
+      pixels.changeColor(r, g, b);
+  }
+  else if (command == "playAnimation")
+  {
+    if (arguments[0] == "rainbow")
+    {
+      programMgr.setProgram(RAINBOW);
+    }
+    else if (arguments[0] == "manuel")
+    {
+      programMgr.setProgram(SET_MANUEL_COLOR);
+    }
+    else
+    {
+      Serial.println("Program does not exist!");
+    }
+  }
+  else
+  {
+    Serial.println("unkown command!");
+  }
 
   Serial.println(String(command));
   for (size_t i = 0; i < 3; i++)

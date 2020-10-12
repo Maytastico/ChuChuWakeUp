@@ -58,7 +58,7 @@ The Raspberry will contain the server that manages everything. There will be a f
 | :--- | ------------------------------------------------------------ |
 | [x]  | Getting serial working                                       |
 | [x]  | Getting the arduino to interpret the commands that were send over the serial interface |
-| []   | Getting the arduino to execute the commands properly         |
+| [x]  | Getting the arduino to execute the commands properly         |
 | []   | Getting the raspberry to send serial commands over the serial interface |
 | []   | Building a prototype for the web interface                   |
 | []   | Coding the web interface                                     |
@@ -66,3 +66,4 @@ The Raspberry will contain the server that manages everything. There will be a f
 | []   | Connecting the front-end with the back-end                   |
 | []   | Finalizing the project                                       |
 | []   | Presenting one of four topics regarding the project at the fifth verbal secondary school exam |
+| []   | Writing a sunrise animation                                  |

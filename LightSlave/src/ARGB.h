@@ -26,6 +26,19 @@ private:
 
   EpromHandler* storage = nullptr;
 
+  
+  enum Blicking{
+    BLINK_ON,
+    BLINK_OFF,
+    STBY
+  };
+  Blicking blinkingState = STBY;
+
+  Timer blinking;
+
+  uint32_t Blinkcolor;
+
+  uint8_t blinkCounter = 0;
   /**
    * Timer for Fade in/out animation
    **/ 
@@ -88,6 +101,7 @@ private:
 
   void StripeOff();
   void StripeOn();
+  
 
 public:
   /**
@@ -125,15 +139,18 @@ public:
   /**
    * 
    */
-  void changeToColor();
+  
   void changeColor(uint8_t r, uint8_t g, uint8_t b);
   void changeColor(uint32_t color);
+  void changeToColor();
   void changeColor(uint32_t color, boolean forceFadeOut);
   uint8_t getBrightness(void);
   void toggleStripe();
   void gotoBrightness(void);
   bool isStoringRequested(void);
-  
+  void blink(uint32_t color, uint8_t pixel, uint16_t duration, uint8_t times);
+  void showError(int duration);
+
   void loop();
   void resetStoringRequest(void);
   void setBrightnes(uint8_t b);
