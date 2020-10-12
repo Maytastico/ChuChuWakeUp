@@ -120,7 +120,7 @@ void processSerialCommand()
     if (command == "setColor")
       pixels.setColor(r, g, b);
     else if (command == "setColorFade")
-      pixels.changeColor(r, g, b);
+      pixels.changeColor(pixels.Color(r, g, b));
   }
   else if (command == "playAnimation")
   {
@@ -135,6 +135,14 @@ void processSerialCommand()
     else
     {
       Serial.println("Program does not exist!");
+    }
+  }
+  else if (command == "setBrightness")
+  {
+    int brightness = arguments[0].toInt();
+    if (brightness > 0 && brightness < 256)
+    {
+      pixels.setBrightnes(brightness);
     }
   }
   else
