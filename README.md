@@ -59,6 +59,7 @@ The Raspberry will contain the server that manages everything. There will be a f
 | [x]  | Getting serial working                                       |
 | [x]  | Getting the arduino to interpret the commands that were send over the serial interface |
 | [x]  | Getting the arduino to execute the commands properly         |
+| []   | Getting a sunrise animation to work |
 | []   | Getting the raspberry to send serial commands over the serial interface |
 | []   | Building a prototype for the web interface                   |
 | []   | Coding the web interface                                     |
