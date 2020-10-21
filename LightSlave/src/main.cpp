@@ -78,6 +78,8 @@ void loop()
     processSerialCommand();
   }
 
+  //pixels.changeColor(255, 200, 119);
+
   if (programMgr.getCurrentProgram() == SET_MANUEL_COLOR)
     // execution of the ARGB Stripe state machine
     pixels.loop();
@@ -106,13 +108,18 @@ void processSerialCommand()
     b = arguments[2].toInt();
     if (r == 0 && g == 0 && b == 0)
     {
-      Serial.println("At least one argument should containe a number greater then zero");
-      return;
+      r = 1;
+      g = 1;
+      b = 1;
     }
     else if (r > 255 || g > 255 || b > 255)
     {
-      Serial.print("Arguments shouln't be greater then 255");
-      return;
+      if (r > 255)
+        r = 255;
+      if (g > 255)
+        g = 255;
+      if (b > 255)
+        b = 255;
     }
 
     //Serial.println("Red: " + String(r) + ", Green: " + String(g) + ", Blue: " + String(b));
@@ -150,11 +157,7 @@ void processSerialCommand()
     Serial.println("unkown command!");
   }
 
-  Serial.println(String(command));
-  for (size_t i = 0; i < 3; i++)
-  {
-    Serial.println("Arguments: " + String(arguments[i]));
-  }
+  Serial.println(command);
 }
 
 //Executes the program changes with the commands that were delivered by the IR module

@@ -16,29 +16,34 @@ const uint8_t BRIGHTNESS_STEP = 10;
 const uint8_t MAX_BRIGHTNESS = 255;
 const uint8_t MIN_BRIGHTNESS = 1;
 const uint16_t STORING_DELAY_TIME = 1000 * 5; // 5s -> 5_000ms
-const uint8_t TIMER_DURATION = 50;
+const uint8_t DEFAULT_TIMER_DURATION = 50;
+
+  /**
+   * Contains the certain states that program goes through when it
+   * changes the color.
+   */
+  enum ChangeColor
+  {
+    STDBY,
+    FADE_OUT,
+    SET_COLOR,
+    FADE_IN,
+  };
 
 class ARGB : public Adafruit_NeoPixel
 {
 private:
-  
+  //Brightness Fade Constants
+  uint8_t timerDuration = 50;
+
+
+
   uint8_t mosfetPin = 255;
 
   EpromHandler* storage = nullptr;
 
   
-  enum Blicking{
-    BLINK_ON,
-    BLINK_OFF,
-    STBY
-  };
-  Blicking blinkingState = STBY;
-
-  Timer blinking;
-
-  uint32_t Blinkcolor;
-
-  uint8_t blinkCounter = 0;
+  
   /**
    * Timer for Fade in/out animation
    **/ 
@@ -76,19 +81,6 @@ private:
   uint32_t currentColor;
   uint32_t targetColor;
 
-  
-
-  /**
-   * Contains the certain states that program goes through when it
-   * changes the color.
-   */
-  enum ChangeColor
-  {
-    STDBY,
-    FADE_OUT,
-    SET_COLOR,
-    FADE_IN,
-  };
 
   /**
    * Contains the state where the program for changing a color is in.
@@ -141,6 +133,7 @@ public:
    */
   
   void changeColor(uint8_t r, uint8_t g, uint8_t b);
+  void changeColor(uint8_t r, uint8_t g, uint8_t b, uint16_t FadeDuration);
   void changeColor(uint32_t color);
   void changeToColor();
   void changeColor(uint32_t color, boolean forceFadeOut);

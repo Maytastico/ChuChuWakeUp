@@ -1,6 +1,6 @@
 # What is ChuChuWakeUp?
 
-ChuChuWake is a application that is designed to work with a raspberry pi and an arduino. It shall be an application that achieves a pleasant awakening. The idea is that a led stripe will simulate a sunrise, but before the sun rises the raspberry pi will play natural noises like birdsongs, wave sounds, or wind noises. The application will be controlled by an Web-Application. It shall be able to set the color, an animation, a wake-up time, a preferred wake-up sound and when the waking up sequence stops. The communication between raspberry pi and arduino will be over the serial interface. The raspberry pi sends commands to the raspberry that will be interpreted by the arduino. The Web-App communicates over HTTP requests with the Python script which has the function to interpret the HTTP requests into Serial commands. However that is just one task that the python server has. It also controls the waking up sequence. A curl configuration will look whether the server is running or not. If it dies, curl will restart the application. So it plays the role of a watchdog to be sure that everything works.
+ChuChuWakeUp is an application that is designed to work with a raspberry pi and an arduino. It shall be an application that achieves a pleasant awakening. The idea is that a led stripe will simulate a sunrise, but before the sun rises the raspberry pi will play natural noises like birdsongs, wave sounds, or wind noises. The application will be controlled by an Web-Application. It shall be able to set the color, an animation, a wake-up time, a preferred wake-up sound and when the waking up sequence stops. The communication between raspberry pi and arduino will be over the serial interface. The raspberry pi sends commands to the raspberry that will be interpreted by the arduino. The Web-App communicates over HTTP requests with the Python script which has the function to interpret the HTTP requests into Serial commands. However that is just one task that the python server has. It also controls the waking up sequence. A curl configuration will look whether the server is running or not. If it dies, curl will restart the application. So it plays the role of a watchdog to be sure that everything works.
 
 # Serial Commands
 
@@ -37,7 +37,7 @@ The Raspberry will contain the server that manages everything. There will be a f
 
 # Topics
 
-1. "Die Serielle Kommunikation und wie sie in diesem Projekt eingesetzt wird."
+1. "Die serielle Kommunikation und wie sie in diesem Projekt eingesetzt wird."
    1. Geschichte der Seriellen kommunikation
    2. Serielle kommunikation allgemein
    3. Wie der Arduino die Befehle interpretiert

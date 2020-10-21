@@ -27,12 +27,16 @@ void Rainbow::evaluateHue()
   }
 }
 
+void Rainbow::changeToRainbow(){
+  
+}
 void Rainbow::loop()
 {
   if (p_program->getCurrentProgram() == RAINBOW)
   {
     if (refreshStripe.isTimerReady())
     {
+
       setRainbow();
       evaluateHue();
       refreshStripe.startTimer(p_program->getUpdateRate());

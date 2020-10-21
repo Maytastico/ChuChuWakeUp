@@ -48,8 +48,8 @@ void ARGB::changeToColor()
     ChangeColorState = STDBY;
     break;
   case FADE_OUT:
-    
-     //temporaily saves the brightness to set it later.
+
+    //temporaily saves the brightness to set it later.
     this->oldBrightness = this->currentBrightness;
 
     //turns the brightness of the stripe to minimal brightness
@@ -117,7 +117,7 @@ void ARGB::gotoBrightness()
     }
     // show brighness to LED strip
     setBrightnes(currentBrightness);
-    timerBrightness.startTimer(TIMER_DURATION);
+    timerBrightness.startTimer(timerDuration);
   }
 }
 
@@ -140,6 +140,7 @@ void ARGB::setBrightnes(uint8_t brightness)
   this->setBrightness(brightness);
   this->show();
 }
+
 
 // set brightness relative to the last value
 void ARGB::setBrightnessRelative(int16_t step)
@@ -205,37 +206,46 @@ void ARGB::setupARGB(uint8_t brightness, uint32_t color)
   setBrightnes(brightness);
   this->loop();
 }
-void ARGB::toggleStripe(){
-  if(isOnb == true){
+void ARGB::toggleStripe()
+{
+  if (isOnb == true)
+  {
     isOnb = false;
     StripeOff();
-  }else{
+  }
+  else
+  {
     isOnb = true;
     StripeOn();
   }
 }
 
-void ARGB::StripeOff(){
-  if(mosfetPin != 255){
+void ARGB::StripeOff()
+{
+  if (mosfetPin != 255)
+  {
     digitalWrite(mosfetPin, false);
   }
-  changeColor(0,0,0);
+  changeColor(0, 0, 0);
 }
 
-void ARGB::StripeOn(){
-  if(mosfetPin != 255){
+void ARGB::StripeOn()
+{
+  if (mosfetPin != 255)
+  {
     digitalWrite(mosfetPin, true);
   }
   changeColor(storage->getSavedColor());
 }
-
 
 // execute a color change and monitor the manual change of brightness
 void ARGB::loop()
 {
   if (currentBrightness != targetBrightness)
   {
-    gotoBrightness();
+    gotoBrightness(); /* 
+    Serial.println("Fade State: " + String(ChangeColorState));
+    Serial.println("Fade State: " + String(targetBrightness)); */
   }
   else if (ChangeColorState != STDBY)
   {

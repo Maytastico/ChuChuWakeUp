@@ -21,6 +21,8 @@ class Rainbow{
 
         Timer refreshStripe;
 
+        ChangeColor brightnessState = STDBY;
+
     public:
         Rainbow(){}
 
@@ -28,6 +30,7 @@ class Rainbow{
              this->p_argb = _argb;
              this->p_program = program;
         };
+        void changeToRainbow();
         void setRainbow();
         void evaluateHue();
         void loop();
