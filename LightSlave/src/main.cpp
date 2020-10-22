@@ -78,13 +78,15 @@ void loop()
     processSerialCommand();
   }
 
-  //pixels.changeColor(255, 200, 119);
-
-  if (programMgr.getCurrentProgram() == SET_MANUEL_COLOR)
-    // execution of the ARGB Stripe state machine
+  
     pixels.loop();
-  else if (programMgr.getCurrentProgram() == RAINBOW)
+  if (programMgr.getCurrentProgram() == RAINBOW)
     rainBowProgram.loop();
+  else if(programMgr.getCurrentProgram() == SET_MANUEL_COLOR)
+  {
+    rainBowProgram.stop();
+  }
+  
 
   // storing actual brightness to EEPROM
   if (pixels.isStoringRequested() == true)
@@ -149,7 +151,7 @@ void processSerialCommand()
     int brightness = arguments[0].toInt();
     if (brightness > 0 && brightness < 256)
     {
-      pixels.setBrightnes(brightness);
+      pixels.setBrightness(brightness);
     }
   }
   else

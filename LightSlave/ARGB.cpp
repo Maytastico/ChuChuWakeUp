@@ -87,11 +87,6 @@ void ARGB::changeToColor()
   }
 }
 
-// get actual brightness of LED strip
-uint8_t ARGB::getBrightness(void)
-{
-  return currentBrightness;
-}
 
 // change to a new target brightness
 void ARGB::gotoBrightness()
@@ -116,7 +111,7 @@ void ARGB::gotoBrightness()
         currentBrightness = (uint8_t)actBrightness;
     }
     // show brighness to LED strip
-    setBrightnes(currentBrightness);
+    setBrightness(currentBrightness);
     timerBrightness.startTimer(timerDuration);
   }
 }
@@ -134,7 +129,7 @@ void ARGB::resetStoringRequest(void)
 }
 
 // set brightness and show at LED strip
-void ARGB::setBrightnes(uint8_t brightness)
+void ARGB::setBrightness(uint8_t brightness)
 {
   // set brighness and show at LED strip
   this->setBrightness(brightness);
@@ -160,7 +155,7 @@ void ARGB::setBrightnessRelative(int16_t step)
     currentBrightness = (uint8_t)actBrightness;
   }
   // show brightness to LED strip
-  setBrightnes(currentBrightness);
+  setBrightness(currentBrightness);
   setTargetBrightness(currentBrightness);
 
   //  start monitoring the change of brightness
@@ -196,10 +191,12 @@ void ARGB::setTargetBrightness(uint8_t brightess)
   targetBrightness = brightess;
 }
 
-// set target brighness
-void ARGB::setTargetBrightness()
-{
-  this->targetBrightness = storage->getSavedBrightness();
+uint8_t ARGB::getTargetBrightness(void){
+  return targetBrightness;
+}
+
+uint8_t ARGB::getCurrentBrightness(void){
+  return currentBrightness;
 }
 
 // setup light data and send to LED strip
@@ -209,7 +206,7 @@ void ARGB::setupARGB(uint8_t brightness, uint32_t color)
   targetColor = currentColor = color;
 
   // show brighness and color at LED strip
-  setBrightnes(brightness);
+  setBrightness(brightness);
   this->loop();
 }
 void ARGB::toggleStripe()
@@ -228,22 +225,29 @@ void ARGB::toggleStripe()
 
 void ARGB::StripeOff()
 {
+  if (mosfetPin != 255)
+  {
+    digitalWrite(mosfetPin, false);
+  }
   changeColor(0, 0, 0);
 }
 
 void ARGB::StripeOn()
 {
+  if (mosfetPin != 255)
+  {
+    digitalWrite(mosfetPin, true);
+  }
   changeColor(storage->getSavedColor());
 }
 
 // execute a color change and monitor the manual change of brightness
 void ARGB::loop()
 {
+  Serial.println(targetBrightness);
   if (currentBrightness != targetBrightness)
   {
-    gotoBrightness(); /* 
-    Serial.println("Fade State: " + String(ChangeColorState));
-    Serial.println("Fade State: " + String(targetBrightness)); */
+    gotoBrightness();
   }
   else if (ChangeColorState != STDBY)
   {
