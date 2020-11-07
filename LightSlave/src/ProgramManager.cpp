@@ -8,6 +8,10 @@ Program ProgramManager::getCurrentProgram(){
     return currentProgram;
 }
 
+void ProgramManager::setStore(EpromHandler *storage){
+    this->storage = storage;
+}
+
 void ProgramManager::setUpdateRateRelative(int16_t step){
     int32_t actUpdateRate = (uint16_t)updateRate + step;
 
@@ -23,4 +27,5 @@ void ProgramManager::setUpdateRateRelative(int16_t step){
 
 void ProgramManager::setProgram(Program newProgram){
     currentProgram = newProgram;
+    storage->storeProgrammStatus((int)newProgram);
 }

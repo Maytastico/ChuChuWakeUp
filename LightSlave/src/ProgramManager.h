@@ -2,6 +2,7 @@
 #define ProgramManager_H_
 
 #include <Arduino.h>
+#include <EpromHandler.h>
 
 /**
      * Contains possible light programs/animation that can be played
@@ -18,8 +19,12 @@ class ProgramManager{
 
     Program currentProgram = OFF;
 
+    EpromHandler *storage = nullptr;
+
   public:
     ProgramManager(){}
+
+    void setStore(EpromHandler *storage);
 
     uint16_t getUpdateRate();
 

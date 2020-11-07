@@ -7,6 +7,7 @@
 #include <Adafruit_NeoPixel.h>
 #include <EpromHandler.h>
 #include <Timer.h>
+#include <ProgramManager.h>
 
 /** 
  * Is used to define how high the brightness value will be increased after pressing the corrosponding button
@@ -50,6 +51,10 @@ private:
   uint8_t timerDuration = 30;
 
   EpromHandler *storage = nullptr;
+
+  ProgramManager *program = nullptr;
+
+  Program lastProgram;
 
   /**
    * Timer for Fade in/out animation
@@ -130,9 +135,10 @@ public:
    * Constructor for ARGB LEDS. It is in relation to the Adafruit Neopixel Liberay.
    * To easily access all functions to modify the attributes of the ARGB Stribe
    */
-  ARGB(uint16_t numPixels, uint8_t ledPin, EpromHandler *rgbStorage, neoPixelType type) : Adafruit_NeoPixel(numPixels, ledPin, type)
+  ARGB(uint16_t numPixels, uint8_t ledPin, EpromHandler *rgbStorage, ProgramManager *programMgr, neoPixelType type) : Adafruit_NeoPixel(numPixels, ledPin, type)
   {
     storage = rgbStorage;
+    program = programMgr;
   }
 
   /**

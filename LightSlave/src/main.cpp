@@ -21,9 +21,6 @@ IRrecv irrecv(IR_Pin);
 //Handles Received Data;
 IRReceiver myIr(&irrecv);
 
-//Handles Neopixel
-ARGB pixels(numPixels, LED_Pin, &myStore, NEO_GRB + NEO_KHZ800);
-
 //Contains the rainbow program that goes throu the whole
 Rainbow rainBowProgram;
 
@@ -33,13 +30,19 @@ ProgramManager programMgr;
 //Manages Serial communication
 SerialHandler serial;
 
+//Handles Neopixel
+ARGB pixels(numPixels, LED_Pin, &myStore, &programMgr, NEO_GRB + NEO_KHZ800);
+
+
 void setup()
 {
   // Loaded data from EEPROM
   uint8_t loadBrightness;
   uint32_t loadColor;
+  uint8_t loadProgram;
 
-  programMgr.setProgram(SET_MANUEL_COLOR);
+  programMgr.setStore(&myStore);
+  programMgr.setProgram(static_cast<Program>(loadProgram));
 
   // Set the power on pin as output and switch on
   pinMode(PowerOn_Pin, OUTPUT);
@@ -51,7 +54,7 @@ void setup()
 
   // Initialize EEPROM
   myStore.begin();
-  myStore.getLightData(&loadBrightness, &loadColor);
+  myStore.getLightData(&loadBrightness, &loadColor, &loadProgram);
 
   // Initialize IR Receiver
   myIr.begin();
@@ -59,6 +62,7 @@ void setup()
   // Initialize ARGB Libery
   pixels.begin();
   pixels.setupARGB(loadBrightness, loadColor);
+
 }
 
 void processIRCommand();

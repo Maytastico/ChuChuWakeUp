@@ -141,7 +141,6 @@ void ARGB::setBrightnes(uint8_t brightness)
   this->show();
 }
 
-
 // set brightness relative to the last value
 void ARGB::setBrightnessRelative(int16_t step)
 {
@@ -228,12 +227,22 @@ void ARGB::toggleStripe()
 
 void ARGB::StripeOff()
 {
-  changeColor(0, 0, 0);
+  this->lastProgram = static_cast<Program>(this->storage->getSavedProgram());
+  targetBrightness = MIN_BRIGHTNESS;
+  this->program->setProgram(OFF);
 }
 
 void ARGB::StripeOn()
 {
-  changeColor(storage->getSavedColor());
+  if (this->lastProgram == SET_MANUEL_COLOR)
+  {
+    changeColor(storage->getSavedColor());
+  }
+  else
+  {
+    program->setProgram(this->lastProgram);
+  }
+  targetBrightness = MAX_BRIGHTNESS;
 }
 
 // execute a color change and monitor the manual change of brightness
