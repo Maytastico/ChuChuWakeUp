@@ -41,9 +41,6 @@ void setup()
   uint32_t loadColor;
   uint8_t loadProgram;
 
-  programMgr.setStore(&myStore);
-  programMgr.setProgram(static_cast<Program>(loadProgram));
-
   // Set the power on pin as output and switch on
   pinMode(PowerOn_Pin, OUTPUT);
   digitalWrite(PowerOn_Pin, true);
@@ -55,6 +52,10 @@ void setup()
   // Initialize EEPROM
   myStore.begin();
   myStore.getLightData(&loadBrightness, &loadColor, &loadProgram);
+
+  //Program status will be read from EERPOM and sets
+  programMgr.setStore(&myStore);
+  programMgr.setProgram(static_cast<Program>(loadProgram));
 
   // Initialize IR Receiver
   myIr.begin();
@@ -84,7 +85,7 @@ void loop()
 
   
     pixels.loop();
-  if (programMgr.getCurrentProgram() == RAINBOW)
+  if (programMgr.getCurrentProgram() == RAINBOW &&  programMgr.getCurrentProgram() != OFF)
     rainBowProgram.loop();
   else if(programMgr.getCurrentProgram() == SET_MANUEL_COLOR)
   {
