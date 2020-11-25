@@ -208,6 +208,12 @@ public:
    * Initilize the LED stripe with the saved values from the EEPROM
    */
   void setupARGB(uint8_t brightness, uint32_t color);
+  
+  /**
+   * Generates a Random number between 0 and 655536 
+   * and filters it into a "truer" color
+   */
+  uint32_t generateRandomColor(void);
 };
 
 #endif // ARGB_H_

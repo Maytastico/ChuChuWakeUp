@@ -6,6 +6,7 @@
 #include <Rainbow.h>
 #include <ProgramManager.h>
 #include <SerialHandler.h>
+#include <RandomColorFade.h>
 
 const byte LED_Pin = 6;
 const uint8_t IR_Pin = 5; //11;
@@ -23,6 +24,9 @@ IRReceiver myIr(&irrecv);
 
 //Contains the rainbow program that goes throu the whole
 Rainbow rainBowProgram;
+
+//Contains the rainbow program that goes throu the whole
+RandomColorFade randomFadeProgram;
 
 //Manages the Programs
 ProgramManager programMgr;
@@ -45,7 +49,7 @@ void setup()
   pinMode(PowerOn_Pin, OUTPUT);
   digitalWrite(PowerOn_Pin, true);
 
-  rainBowProgram.setARGB(&pixels, &programMgr);
+  
   // Initialize Serial Connection
   Serial.begin(9600);
 
@@ -63,6 +67,10 @@ void setup()
   // Initialize ARGB Libery
   pixels.begin();
   pixels.setupARGB(loadBrightness, loadColor);
+
+  //Initializes Programs
+  randomFadeProgram.begin(&pixels);
+  rainBowProgram.setARGB(&pixels, &programMgr);
 
 }
 
@@ -87,10 +95,14 @@ void loop()
     pixels.loop();
   if (programMgr.getCurrentProgram() == RAINBOW &&  programMgr.getCurrentProgram() != OFF)
     rainBowProgram.loop();
+  else if (programMgr.getCurrentProgram() == RANDOM &&  programMgr.getCurrentProgram() != OFF)
+    randomFadeProgram.loop();
   else if(programMgr.getCurrentProgram() == SET_MANUEL_COLOR)
   {
     rainBowProgram.stop();
   }
+  if (programMgr.getCurrentProgram() == RANDOM &&  programMgr.getCurrentProgram() != OFF)
+    randomFadeProgram.loop();
   
 
   // storing actual brightness to EEPROM
@@ -256,6 +268,19 @@ void processIRCommand()
     else
     {
       programMgr.setProgram(RAINBOW);
+    }
+  }
+  else if (data == CHANGE_TO_RANDOM)
+  {
+    if (programMgr.getCurrentProgram() == CHANGE_TO_RANDOM)
+    {
+      programMgr.setProgram(SET_MANUEL_COLOR);
+      pixels.changeColor(myStore.getSavedColor(), true);
+      pixels.loop();
+    }
+    else
+    {
+      programMgr.setProgram(RANDOM);
     }
   }
   else

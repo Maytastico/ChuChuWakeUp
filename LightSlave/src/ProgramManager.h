@@ -11,6 +11,7 @@
       OFF,
       SET_MANUEL_COLOR,
       RAINBOW,
+      RANDOM,
     };
 
 class ProgramManager{

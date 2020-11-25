@@ -16,6 +16,7 @@ const long WHITE = 0xFF22DD;
 const long BRIGHT_UP = 0xFF3AC5;
 const long BRIGHT_DOWN = 0xFFBA45;
 const long CHANGE_TO_RAINBOW = 0xFFF00F;
+const long CHANGE_TO_RANDOM = 0xFFD02F;
 const long TOGGLE_POWER = 0xFF02FD;
 const long INCREASE_SPEED = 0xFFE817;
 const long DEINCREASE_SPEED = 0xFFC837;

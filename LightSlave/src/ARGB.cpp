@@ -245,6 +245,13 @@ void ARGB::StripeOn()
   targetBrightness = MAX_BRIGHTNESS;
 }
 
+uint32_t ARGB::generateRandomColor(){
+  uint8_t randomRed = random(1,255);
+  uint8_t randomGreen = random(1,255);
+  uint8_t randomBlue = random(1,255);
+  return this->Color(randomRed, randomGreen, randomBlue);
+}
+
 // execute a color change and monitor the manual change of brightness
 void ARGB::loop()
 {
