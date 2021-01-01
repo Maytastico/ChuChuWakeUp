@@ -1,292 +1,355 @@
 #include <Arduino.h>
-#include <ARGB.h>
-#include "EpromHandler.h"
 #include <IRremote.h>
-#include <IRReceiver.h>
-#include <Rainbow.h>
-#include <ProgramManager.h>
-#include <SerialHandler.h>
-#include <RandomColorFade.h>
+#include "IRReceiver.h"
+#include "Color_Definitions.h"
+#include "Button_Definition.h"
+#include "LedController.h"
+#include "EpromHandler.h"
+#include "ProgramManager.h"
+#include "TransitionHandler.h"
+#include "Rainbow.h"
+#include "RandomColorFade.h"
+#include "RandomColor.h"
+#include "StarLight.h"
 
+//Pin Definitions
+const uint8_t PowerOn_Pin = 7; //temp
 const byte LED_Pin = 6;
-const uint8_t IR_Pin = 5; //11;
-const uint8_t PowerOn_Pin = 7;
+const uint8_t IR_Pin = 5;
 const uint16_t numPixels = 50;
 
-// EEPROM Handler
-EpromHandler myStore;
+//Declarations
 
+//--Transition Handler--
+TransitionHandler transitionHandler;
+//--Program manager--
+ProgramManager manager;
+//-----EEPROM-Handler----
+EpromHandler memory;
+//-----IR-Receiver-----
 //IR Control Objects
 IRrecv irrecv(IR_Pin);
-
 //Handles Received Data;
-IRReceiver myIr(&irrecv);
-
-//Contains the rainbow program that goes throu the whole
-Rainbow rainBowProgram;
-
-//Contains the rainbow program that goes throu the whole
-RandomColorFade randomFadeProgram;
-
-//Manages the Programs
-ProgramManager programMgr;
-
-//Manages Serial communication
-SerialHandler serial;
-
+IRReceiver irReceiver(&irrecv);
+//---------ARGB--------
 //Handles Neopixel
-ARGB pixels(numPixels, LED_Pin, &myStore, &programMgr, NEO_GRB + NEO_KHZ800);
+LedController pixels(numPixels, LED_Pin, RGB, NEO_GRB + NEO_KHZ800, &memory, &transitionHandler);
 
+//-------------Animation Programs-----------------
+
+//Executes a rainbow program
+Rainbow rainbow;
+
+//Executes a random color program
+RandomColorFade randomColorFade;
+
+//Executes a program that sets
+//every pixel to a random color
+RandomColor randomColor;
+
+StarLight starLight;
+
+Timer debug;
 
 void setup()
 {
-  // Loaded data from EEPROM
-  uint8_t loadBrightness;
-  uint32_t loadColor;
-  uint8_t loadProgram;
 
-  // Set the power on pin as output and switch on
-  pinMode(PowerOn_Pin, OUTPUT);
-  digitalWrite(PowerOn_Pin, true);
+  //Initilizes the TransitionHandler
+  transitionHandler.begin(&pixels);
 
-  
-  // Initialize Serial Connection
+  //Serial commuinication
   Serial.begin(9600);
 
-  // Initialize EEPROM
-  myStore.begin();
-  myStore.getLightData(&loadBrightness, &loadColor, &loadProgram);
+  // Set the power on pin as output and switch on
+  pinMode(PowerOn_Pin, OUTPUT);    //temp
+  digitalWrite(PowerOn_Pin, true); //temp
 
-  //Program status will be read from EERPOM and sets
-  programMgr.setStore(&myStore);
-  programMgr.setProgram(static_cast<Program>(loadProgram));
+  //Initializes EEPROM Memory
+  memory.begin();
 
   // Initialize IR Receiver
-  myIr.begin();
+  irReceiver.begin();
 
-  // Initialize ARGB Libery
+  // Initialize LedController Libary and Led stripe
   pixels.begin();
-  pixels.setupARGB(loadBrightness, loadColor);
+  pixels.changeBrightness(memory.getSavedBrightness());
+  pixels.setupController(memory.getSavedColor(), memory.getSavedBrightness());
+  if (memory.getSavedProgram() == SET_MANUEL_COLOR)
+  {
+    pixels.changeColorWithTransition(memory.getSavedColor(), DEFAULT_TRANSITION);
+  }
 
-  //Initializes Programs
-  randomFadeProgram.begin(&pixels);
-  rainBowProgram.setARGB(&pixels, &programMgr);
+  //Initilizes the programm manager and casts the number to an Programm enum
+  manager.setProgram(static_cast<Program>(memory.getSavedProgram()));
+  manager.setStore(&memory);
 
+  //------Animation Setup------
+  rainbow.begin(&pixels);
+
+  randomColorFade.begin(&pixels);
+
+  randomColor.begin(&pixels, &transitionHandler);
+
+  starLight.begin(&pixels);
+
+  debug.startTimer(1000);
 }
 
-void processIRCommand();
-void processSerialCommand();
+/**
+ * @brief trys to pull data from the infrared receiver
+ * 
+ */
+void processIRData(void);
 
 void loop()
 {
-  // receive and decode IR data
-  if (myIr.isDataReady())
+
+  if (debug.isTimerReady())
   {
-    processIRCommand();
+    Serial.println(memory.getSavedProgram());
+    Serial.println(manager.getCurrentProgram());
+    Serial.println(String(memory.getSavedBrightness()));
+    Serial.println(String(memory.getSavedColor()));
+
+    debug.startTimer(1000);
+  }
+
+  // receive and decode IR data
+  if (irReceiver.isDataReady())
+  {
+    processIRData();
   } // End  if (myIr.isDataReady())
 
-  serial.loop();
-  if (serial.dataAvailable() == true)
+  //Performs a periodical save of the brightness value every 3 seconds
+  pixels.loop();
+
+  //Executes certain state machines that handle transitioning
+  //from one to another color
+  transitionHandler.loop();
+
+  //Defines what loop will be executed
+  switch (manager.getCurrentProgram())
   {
-    processSerialCommand();
-  }
-
-  
-    pixels.loop();
-  if (programMgr.getCurrentProgram() == RAINBOW &&  programMgr.getCurrentProgram() != OFF)
-    rainBowProgram.loop();
-  else if (programMgr.getCurrentProgram() == RANDOM &&  programMgr.getCurrentProgram() != OFF)
-    randomFadeProgram.loop();
-  else if(programMgr.getCurrentProgram() == SET_MANUEL_COLOR)
-  {
-    rainBowProgram.stop();
-  }
-  if (programMgr.getCurrentProgram() == RANDOM &&  programMgr.getCurrentProgram() != OFF)
-    randomFadeProgram.loop();
-  
-
-  // storing actual brightness to EEPROM
-  if (pixels.isStoringRequested() == true)
-  {
-    myStore.storeBrightness(pixels.getBrightness());
-    pixels.resetStoringRequest();
-  }
-
-} // end of loop
-
-void processSerialCommand()
-{
-  String command = serial.getCommand();
-  String *arguments = serial.getArguments();
-
-  if (command == "setColor" || command == "setColorFade")
-  {
-    int r, g, b;
-    r = arguments[0].toInt();
-    g = arguments[1].toInt();
-    b = arguments[2].toInt();
-    if (r == 0 && g == 0 && b == 0)
+  case OFF:
+    break;
+  case SET_MANUEL_COLOR:
+    break;
+  case RANDOM:
+    randomColorFade.loop();
+    break;
+  case RANDOM_COLOR_FRAME:
+    if (transitionHandler.getCurrentTransitionState() == STDBY || transitionHandler.getCurrentTransitionState() == STATE_3)
     {
-      r = 1;
-      g = 1;
-      b = 1;
+      randomColor.loop();
     }
-    else if (r > 255 || g > 255 || b > 255)
+    break;
+  case STAR_LIGHT:
+    if (transitionHandler.getCurrentTransitionState() == STDBY || transitionHandler.getCurrentTransitionState() == STATE_3)
     {
-      if (r > 255)
-        r = 255;
-      if (g > 255)
-        g = 255;
-      if (b > 255)
-        b = 255;
+      starLight.loop();
     }
-
-    //Serial.println("Red: " + String(r) + ", Green: " + String(g) + ", Blue: " + String(b));
-    programMgr.setProgram(SET_MANUEL_COLOR);
-    if (command == "setColor")
-      pixels.setColor(r, g, b);
-    else if (command == "setColorFade")
-      pixels.changeColor(pixels.Color(r, g, b));
+    break;
+  case RAINBOW:
+    if (transitionHandler.getCurrentTransitionState() == STDBY || transitionHandler.getCurrentTransitionState() == STATE_3)
+    {
+      rainbow.loop();
+    }
+    break;
   }
-  else if (command == "playAnimation")
-  {
-    if (arguments[0] == "rainbow")
-    {
-      programMgr.setProgram(RAINBOW);
-    }
-    else if (arguments[0] == "manuel")
-    {
-      programMgr.setProgram(SET_MANUEL_COLOR);
-    }
-    else
-    {
-      Serial.println("Program does not exist!");
-    }
-  }
-  else if (command == "setBrightness")
-  {
-    int brightness = arguments[0].toInt();
-    if (brightness > 0 && brightness < 256)
-    {
-      pixels.setBrightness(brightness);
-    }
-  }
-  else
-  {
-    Serial.println("unkown command!");
-  }
-
-  Serial.println(command);
 }
 
-//Executes the program changes with the commands that were delivered by the IR module
-void processIRCommand()
+void processIRData()
 {
-  uint32_t data = myIr.getEncodedData();
+  uint32_t data = irReceiver.getEncodedData();
 
-  // Command : Change to green color
-  if (data == TOGGLE_POWER)
+  switch (data)
   {
-    pixels.toggleStripe();
-  }
-  else if (data == INCREASE_SPEED)
-  {
-    programMgr.setUpdateRateRelative(-10);
-  }
-  else if (data == DEINCREASE_SPEED)
-  {
-    programMgr.setUpdateRateRelative(10);
-  }
-  else if (data == GREEN_COLOR)
-  {
-    // store and request a change of color
-    myStore.storeColor(pixels.Color(0, 255, 0));
-    pixels.changeColor(0, 255, 0);
-  }
-  // Command : Change to red color
-  else if (data == RED_COLOR)
-  {
-    // store and request a change of color
-    myStore.storeColor(pixels.Color(255, 0, 0));
-    pixels.changeColor(255, 0, 0);
-  }
-  // Command : Changes color to blue
-  else if (data == BLUE_COLOR)
-  {
-    // store and request a change of color
-    myStore.storeColor(pixels.Color(0, 0, 255));
-    pixels.changeColor(0, 0, 255);
-  }
-  // Command : Changes color to Orange
-  else if (data == ORAGNE_COLOR)
-  {
-    // store and request a change of color
-    myStore.storeColor(0xFFBF00);
-    pixels.changeColor(0xFFBF00);
-  }
-  // Command : Changes color to blue
-  else if (data == LIME_COLOR)
-  {
-    // store and request a change of color
-    myStore.storeColor(pixels.Color(10, 223, 100));
-    pixels.changeColor(10, 223, 100);
-  }
-  // Command : Changes color to light blue
-  else if (data == LIGHT_BLUE_COLOR)
-  {
-    // store and request a change of color
-    myStore.storeColor(pixels.Color(27, 229, 229));
-    pixels.changeColor(27, 229, 229);
-  } // Command : Changes color to white
-  else if (data == WHITE)
-  {
-    // store and request a change of color
-    myStore.storeColor(pixels.Color(255, 255, 255));
-    pixels.changeColor(255, 255, 255);
-  }
-  // Command : Increase brightness
-  else if (data == BRIGHT_UP)
-  {
-    // increase brightness, after 5s store value to EEPROM
-    pixels.setBrightnessRelative(BRIGHTNESS_OFFSET);
-  }
-  // Command : Decrease brightness
-  else if (data == BRIGHT_DOWN)
-  {
+    //Controle Stripe
+
+  case BRIGHT_DOWN:
     // decrease brightness, after 5s store value to EEPROM
     pixels.setBrightnessRelative(-BRIGHTNESS_OFFSET);
-  }
-  // Command : Decrease brightness
-  else if (data == CHANGE_TO_RAINBOW)
-  {
-    if (programMgr.getCurrentProgram() == RAINBOW)
+    break;
+  case BRIGHT_UP:
+    // increase brightness, after 5s store value to EEPROM
+    pixels.setBrightnessRelative(BRIGHTNESS_OFFSET);
+    break;
+
+  case ON_POWER:
+    pixels.turnOn();
+    manager.setProgram(static_cast<Program>(memory.getSavedProgram()));
+    if (manager.getCurrentProgram() == RANDOM_COLOR_FRAME)
     {
-      programMgr.setProgram(SET_MANUEL_COLOR);
-      pixels.changeColor(myStore.getSavedColor(), true);
-      pixels.loop();
+      randomColor.resetStateMachine();
+      transitionHandler.playTransition(FADE_IN);
+    }
+
+    break;
+  case OFF_POWER:
+    pixels.turnOff();
+    manager.setProgram(OFF);
+    break;
+  case CHANGE_TO_RAINBOW:
+    if (manager.getCurrentProgram() == RAINBOW)
+    {
+      manager.setProgram(SET_MANUEL_COLOR);
+      pixels.changeColorWithTransition(memory.getSavedColor(), DEFAULT_TRANSITION);
     }
     else
     {
-      programMgr.setProgram(RAINBOW);
+      transitionHandler.playTransition(FADE_TO);
+      transitionHandler.setTransitionMode(ANIMATION);
+      manager.setProgram(RAINBOW);
+      pixels.setUpdateColorWhenBrightnessChanges(false);
     }
-  }
-  else if (data == CHANGE_TO_RANDOM)
-  {
-    if (programMgr.getCurrentProgram() == CHANGE_TO_RANDOM)
+    break;
+  case CHANGE_TO_RANDOM:
+    if (manager.getCurrentProgram() == RANDOM)
     {
-      programMgr.setProgram(SET_MANUEL_COLOR);
-      pixels.changeColor(myStore.getSavedColor(), true);
-      pixels.loop();
+      manager.setProgram(SET_MANUEL_COLOR);
+      pixels.changeColorWithTransition(memory.getSavedColor(), DEFAULT_TRANSITION);
     }
     else
     {
-      programMgr.setProgram(RANDOM);
+      transitionHandler.setTransitionMode(ANIMATION);
+      pixels.setUpdateColorWhenBrightnessChanges(false);
+      manager.setProgram(RANDOM);
     }
-  }
-  else
-  {
+    break;
+
+  case CHANGE_TO_WALK:
+    if (manager.getCurrentProgram() == RANDOM_COLOR_FRAME)
+    {
+      manager.setProgram(SET_MANUEL_COLOR);
+      pixels.changeColorWithTransition(memory.getSavedColor(), DEFAULT_TRANSITION);
+    }
+    else
+    {
+      transitionHandler.setTransitionMode(ANIMATION);
+      pixels.setUpdateColorWhenBrightnessChanges(false);
+      transitionHandler.playTransition(FADE_TO);
+      randomColor.resetStateMachine();
+      manager.setProgram(RANDOM_COLOR_FRAME);
+    }
+    break;
+
+  case CHANGE_TO_FLASH:
+    if (manager.getCurrentProgram() == STAR_LIGHT)
+    {
+      manager.setProgram(SET_MANUEL_COLOR);
+      pixels.changeColorWithTransition(memory.getSavedColor(), DEFAULT_TRANSITION);
+    }
+    else
+    {
+      transitionHandler.setTransitionMode(ANIMATION);
+      pixels.setUpdateColorWhenBrightnessChanges(false);
+      transitionHandler.playTransition(FADE_TO);
+      starLight.resetStateMachine();
+      manager.setProgram(STAR_LIGHT);
+    }
+    break;
+
+    //Stripe Color
+
+  case RED_COLOR:
+    memory.storeColor(RED);
+    pixels.changeColorWithTransition(RED, DEFAULT_TRANSITION);
+    manager.setProgram(SET_MANUEL_COLOR);
+    break;
+  case ORANGE_RED_COLOR:
+    memory.storeColor(ORANGERED);
+    pixels.changeColorWithTransition(ORANGERED, DEFAULT_TRANSITION);
+    manager.setProgram(SET_MANUEL_COLOR);
+    break;
+  case ORANGE_COLOR:
+    memory.storeColor(ORANGE);
+    pixels.changeColorWithTransition(ORANGE, DEFAULT_TRANSITION);
+    manager.setProgram(SET_MANUEL_COLOR);
+    break;
+  case ORAGNE_YELLOW_COLOR:
+    memory.storeColor(GOLD);
+    pixels.changeColorWithTransition(GOLD, DEFAULT_TRANSITION);
+    manager.setProgram(SET_MANUEL_COLOR);
+    break;
+  case YELLOW_COLOR:
+    memory.storeColor(YELLOW);
+    pixels.changeColorWithTransition(YELLOW, DEFAULT_TRANSITION);
+    manager.setProgram(SET_MANUEL_COLOR);
+    break;
+
+  case GREEN_COLOR:
+    memory.storeColor(pixels.Color(0, 255, 0));
+    pixels.changeColorWithTransition(pixels.Color(0, 255, 0), DEFAULT_TRANSITION);
+    manager.setProgram(SET_MANUEL_COLOR);
+    break;
+  case LIME_COLOR:
+    memory.storeColor(FORESTGREEN);
+    pixels.changeColorWithTransition(FORESTGREEN, DEFAULT_TRANSITION);
+    manager.setProgram(SET_MANUEL_COLOR);
+    break;
+  case DARK_LIME_COLOR:
+    memory.storeColor(DARKGREEN);
+    pixels.changeColorWithTransition(DARKGREEN, DEFAULT_TRANSITION);
+    manager.setProgram(SET_MANUEL_COLOR);
+    break;
+  case DARK_GREEN_COLOR:
+    memory.storeColor(DARKCYAN);
+    pixels.changeColorWithTransition(DARKCYAN, DEFAULT_TRANSITION);
+    manager.setProgram(SET_MANUEL_COLOR);
+    break;
+  case DARKER_GREEN_COLOR:
+    memory.storeColor(SEAGREEN);
+    pixels.changeColorWithTransition(SEAGREEN, DEFAULT_TRANSITION);
+    manager.setProgram(SET_MANUEL_COLOR);
+    break;
+
+  case BLUE_COLOR:
+    memory.storeColor(pixels.Color(0, 0, 255));
+    pixels.changeColorWithTransition(pixels.Color(0, 0, 255), DEFAULT_TRANSITION);
+    manager.setProgram(SET_MANUEL_COLOR);
+    break;
+  case LIGHT_BLUE_COLOR:
+    memory.storeColor(ROYALBLUE);
+    pixels.changeColorWithTransition(ROYALBLUE, DEFAULT_TRANSITION);
+    manager.setProgram(SET_MANUEL_COLOR);
+    break;
+  case LIGHT_PURPLE_COLOR:
+    memory.storeColor(INDIGO);
+    pixels.changeColorWithTransition(INDIGO, DEFAULT_TRANSITION);
+    manager.setProgram(SET_MANUEL_COLOR);
+    break;
+  case PURPLE_COLOR:
+    memory.storeColor(PURPLE);
+    pixels.changeColorWithTransition(PURPLE, DEFAULT_TRANSITION);
+    manager.setProgram(SET_MANUEL_COLOR);
+    break;
+  case MAGENTA_COLOR:
+    memory.storeColor(HOTPINK);
+    pixels.changeColorWithTransition(HOTPINK, DEFAULT_TRANSITION);
+    manager.setProgram(SET_MANUEL_COLOR);
+    break;
+
+  case WHITE_COLOR:
+      switch (pixels.getLedMode())
+      {
+      case RGB:
+        memory.storeColor(WHITE);
+        pixels.changeColorWithTransition(WHITE, DEFAULT_TRANSITION);
+        break;
+
+      case RGBW:
+        memory.storeColor(pixels.Color(0, 0, 0, 255));
+        pixels.changeColorWithTransition(pixels.Color(0, 0, 0, 255), DEFAULT_TRANSITION);
+        break;
+      }
+      manager.setProgram(SET_MANUEL_COLOR);
+      break;
+
+
+  default:
     Serial.print("IR-Data : ");
     Serial.print(data, HEX);
     Serial.println("");
+    break;
   }
 }

@@ -1,3 +1,12 @@
+/**
+ * @file Timer.h
+ * @author MacaroniDamage
+ * @brief A useful class that makes timer hanling easier
+ * @version 0.1
+ * @date 2020-12-20
+ * 
+ * 
+ */
 
 #ifndef TIMER_H_
 #define TIMER_H_

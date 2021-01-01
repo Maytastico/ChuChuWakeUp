@@ -1,31 +1,21 @@
-#include <ProgramManager.h>
+#include "ProgramManager.h"
 
-uint16_t ProgramManager::getUpdateRate(){
-    return updateRate;
-}
 
-Program ProgramManager::getCurrentProgram(){
+Program ProgramManager::getCurrentProgram()
+{
     return currentProgram;
 }
 
-void ProgramManager::setStore(EpromHandler *storage){
+void ProgramManager::setStore(EpromHandler *storage)
+{
     this->storage = storage;
 }
 
-void ProgramManager::setUpdateRateRelative(int16_t step){
-    int32_t actUpdateRate = (uint16_t)updateRate + step;
 
-    if(actUpdateRate < 70){
-        updateRate = 70;
-    }else if(actUpdateRate>65536){
-        updateRate = 65536;
-    }else
-    {
-        updateRate = actUpdateRate;
-    }
-}
-
-void ProgramManager::setProgram(Program newProgram){
+void ProgramManager::setProgram(Program newProgram)
+{
     currentProgram = newProgram;
-    storage->storeProgrammStatus((int)newProgram);
+    //saves the program status exept it is the program off
+    if(newProgram != OFF)
+        storage->storeProgrammStatus((int)newProgram);
 }

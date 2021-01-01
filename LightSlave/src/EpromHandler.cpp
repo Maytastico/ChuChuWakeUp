@@ -1,3 +1,13 @@
+/**
+ * @file EpromHandler.cpp
+ * @author MacaroniDamage
+ * @brief Saves and accesses the Data of the EEPROM
+ * @version 0.1
+ * @date 2020-12-16
+ * 
+ * 
+ */
+
 #include <EEPROM.h>
 #include "EpromHandler.h"
 
@@ -8,6 +18,10 @@ void EpromHandler::begin(void)
   // load data from EEPROM
   EEPROM.get(0, storedData);
 
+  Serial.println("Stored Data");
+  Serial.println(String(storedData.brightness));
+  Serial.println(String(storedData.color));
+  Serial.println(String(storedData.programStatus));
   // EEPROM deleted ?
   if ((0 == storedData.brightness) || (0 == storedData.color) || (0 == storedData.programStatus))
   {
@@ -49,10 +63,17 @@ uint8_t EpromHandler::getSavedProgram()
 }
 
 // store brightness to EEPROM
-void EpromHandler::storeBrightness(uint8_t pBrightness)
+void EpromHandler::storeBrightness(uint8_t pBrightness, String programName)
 {
-  this->actData.brightness = pBrightness;
-  EEPROM.put(0, this->actData);
+  if(pBrightness > 10){
+    this->actData.brightness = pBrightness;
+    EEPROM.put(0, this->actData);
+  }else{
+    Serial.println("-----------------Attention---------------------");
+    Serial.println("Program tried to save a brightness value below");
+    Serial.println("Brightness value: "+ String(pBrightness));
+    Serial.println("-----------------Debug-Data---------------------");
+  }
 }
 
 // store color to EEPROM

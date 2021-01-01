@@ -1,12 +1,16 @@
 #include <RandomColorFade.h>
 
-long RandomColorFade::generateTime(){
-    return random(2000, 60000);
-}
 
-void RandomColorFade::loop(){
-    if(this->ChangeColor.isTimerReady()){
-        this->ChangeColor.startTimer(this->generateTime());
-        p_argb->changeColor(p_argb->generateRandomColor());
+//executes the routine
+//checks if the counte is ready an then sets a new color
+void RandomColorFade::loop()
+{
+    if (this->ChangeColor.isTimerReady())
+    {
+        if (p_argb->canShow() == true)
+        {
+            this->ChangeColor.startTimer(random(10000, 60000));
+            p_argb->changeColorWithTransition(p_argb->generateRandomColor(), FADE_TO);
+        }
     }
 }

@@ -1,4 +1,4 @@
-#include <Rainbow.h>
+#include "Rainbow.h"
 
 void Rainbow::setRainbow()
 {
@@ -27,49 +27,12 @@ void Rainbow::evaluateHue()
   }
 }
 
-void Rainbow::changeToRainbow()
-{
-  switch (this->animationState)
-  {
-  case FADE_OUT:
-    this->p_argb->setTargetBrightness(MIN_BRIGHTNESS);
-    if (this->p_argb->getBrightness() == MIN_BRIGHTNESS)
-    {
-      this->animationState = SET_FIRST;
-      
-    }
-    break;
-  case SET_FIRST:
-    this->setRainbow();
-    this->p_argb->setTargetBrightness();
-    this->animationState = PLAY;
-  break;
-  case PLAY:
-    this->setRainbow();
-    this->evaluateHue();
-    break;
-  }
-}
-
-void Rainbow::start()
-{
-  this->animationState = FADE_OUT;
-}
-void Rainbow::stop()
-{
-  this->animationState = STBY;
-}
 void Rainbow::loop()
 {
-  if (this->animationState == STBY && p_program->getCurrentProgram() == RAINBOW)
-    this->animationState = FADE_OUT;
-
-  if (this->animationState != STBY)
+  if (refreshStripe.isTimerReady())
   {
-    if (refreshStripe.isTimerReady())
-    {
-      changeToRainbow();
-      refreshStripe.startTimer(p_program->getUpdateRate());
-    }
+    evaluateHue();
+    setRainbow();
+    refreshStripe.startTimer(ANIMATION_UPDATE_RATE);
   }
 }
