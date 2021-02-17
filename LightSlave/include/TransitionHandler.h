@@ -197,7 +197,7 @@ public:
      * @param targetColor The Color that will be transitioned to
      * @param transition Defines the kind of animation that will be playes
      */
-    void playTransition(uint32_t targetColor, Transition transition);
+    void playTransition(Transition transition, uint32_t targetColor);
 
     /**
      * @brief 
@@ -229,6 +229,10 @@ public:
      * @return TransitionState 
      */
     TransitionState getCurrentTransitionState();
+
+    uint8_t getCurrentBrightness();
+
+    uint8_t getTargetBrightness();
 
     /**
      * @brief The routine that will be executed during every loop cycle

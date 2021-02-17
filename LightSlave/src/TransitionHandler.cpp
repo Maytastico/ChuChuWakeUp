@@ -13,7 +13,7 @@
 /** Configures the instace so that
  * it triggers the wished state machine
 **/
-void TransitionHandler::playTransition(uint32_t targetColor, Transition transition)
+void TransitionHandler::playTransition(Transition transition, uint32_t targetColor)
 {
   this->targetColor = targetColor;
   this->currentColor = _pController->getCurrentColor();
@@ -42,6 +42,7 @@ void TransitionHandler::playTransition(Transition transition)
 
   this->transition = transition;
   this->transitionState = STATE_1;
+  Serial.println("Stage: " + String(transitionState));
 }
 
 void TransitionHandler::setTransitionMode(TransitionMode transitionMode)
@@ -178,6 +179,13 @@ void TransitionHandler::FadeIn()
   }
 }
 
+uint8_t TransitionHandler::getCurrentBrightness(){
+  return currentBrightness;
+}
+
+uint8_t TransitionHandler::getTargetBrightness(){
+  return targetBrightness;
+}
 void TransitionHandler::loop()
 {
   if (transitionState != STDBY)

@@ -42,7 +42,7 @@ void LedController::changeColorWithTransition(uint32_t color, Transition transit
   updateColorWhenBrightnessChanges = true;
   //ensures that the transition mode is standart and not animation
   _pTransition->setTransitionMode(STANDARD);
-  _pTransition->playTransition(color, transition);
+  _pTransition->playTransition(transition,color);
 }
 
 //Changes and configures a Timer that triggers a save command every 3 seconds
@@ -123,13 +123,23 @@ uint32_t LedController::generateRandomColor()
 uint8_t LedController::generateRadomPosition()
 {
   uint8_t pos = random(0, this->numPixels());
-  //int8_t steps = 0;
-  //while (this->lastPositionValue == pos && steps <= 5){
   pos = random(0, this->numPixels());
-  // steps++;
-  //}
-  //this->lastPositionValue = pos;
   return pos;
+}
+
+void LedController::displayArray(uint32_t *frame, uint8_t frameElements, int beginningPosition, boolean override){
+  uint8_t frameIndex = 0;
+  for (uint8_t i = 0; i < this->numPixels(); i++)
+  { 
+    if(i >= beginningPosition && i < beginningPosition+frameElements){
+      this->setPixelColor(i, frame[frameIndex]);
+      frameIndex++;
+    }else{
+      if(override == true)
+        this->setPixelColor(i,this->Color(0,0,0));
+    }
+  }
+  this->show();
 }
 
 //returns the current color value

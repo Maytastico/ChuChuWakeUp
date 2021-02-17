@@ -1,29 +1,34 @@
 #include "StarLight.h"
 
+//Generates random positions and writes them into the starpositions array
 void StarLight::generateStarFrame()
 {
-    Serial.println("Generating Random positions");
     for (unsigned int i = 0; i < AMOUNT_OF_STARS; i++)
     {
 
         //sets a random color to every pixel
         uint8_t pos = _pController->generateRadomPosition();
         this->starPositions[i] = pos;
-        //Serial.println("index: " + String(i) + " pos: " + String(pos));
     }
 }
 
-void StarLight::displayStarFrame()
+//draws the stars on the stripe
+void StarLight::displayStarFrame(boolean randomIntensityActivated)
 {
+    _pController->fill(0);
     for (unsigned int i = 0; i < AMOUNT_OF_STARS; i++)
     {
-        //sets a random color to every pixel
-        uint8_t pos = _pController->generateRadomPosition();
-        uint8_t intensity = random(64, 255);
-        this->starPositions[i] = pos;
+        uint8_t intensity;
+        if(randomIntensityActivated == true){
+            intensity = random(200, 255);
+        }
+        else
+        {
+            intensity = 200;
+        }
 
-        
-         switch (_pController->getLedMode())
+
+        switch (_pController->getLedMode())
         {
         case RGB:
             _pController->setPixelColor(starPositions[i], _pController->Color(intensity, intensity, intensity));
@@ -36,87 +41,100 @@ void StarLight::displayStarFrame()
     _pController->show();
 }
 
+//executes the states
 void StarLight::starLightStage()
 {
     switch (stage)
     {
-    case FIRST_DISPLAY:
-        if (firstINIT.isTimerReady())
-        {
-            displayStarFrame();
-            stage = CHOOSE;
-        }
+    case GENERATE_STARS:
+        this->generateStarFrame();
+        generateNewStars.startTimer(REGENERATE_STARS);
+        stage = DISPLAY_STAR;
         break;
-    case INIT:
-        generateStarFrame();
-        stage = FIRST_DISPLAY;
-        firstINIT.startTimer(1000);
+    case DISPLAY_STAR:
+        this->displayStarFrame(true);
+        cycle.startTimer(500);
+
+        if(nextFallingStar.isTimerReady()){
+            stage = CAST_FALLING_STAR; 
+            choosenType = chooseFallingStar(); 
+            directionFrame = chooseFrameDirection();
+        }
+        else if(generateNewStars.isTimerReady()){ 
+            stage = GENERATE_STARS; 
+        }
+        
         break;
-    case CHOOSE:
-        chosenStar = random(0, AMOUNT_OF_STARS);
-        //Serial.println("Star chosen: " + String(chosenStar));
-        stage = LOOP;
-        chooseNewStar.startTimer(60000);
-        break;
+    case CAST_FALLING_STAR:
+        this->displayStarFrame(false);
+        _pController->displayArray(choosenType, 7, framePosition, false);
 
-    case LOOP:
-        gotoBrightness();
-        if (brightnessOfChosenStar <= 32)
-        {
-            targetBrightnessOfChosenStar = 255;
+        if(directionFrame == LEFT_TO_RIGHT){
+            framePosition--;
+            if(framePosition < -10){
+            nextFallingStar.startTimer(CAST_NEXT_FALLING_STAR);
+            cycle.startTimer(500);
+            stage = DISPLAY_STAR;
         }
-        else if (brightnessOfChosenStar >= 255)
-        {
-            targetBrightnessOfChosenStar = 32;
+        }else if(RIGHT_TO_LEFT){
+            framePosition++;
+            if(framePosition > _pController->numPixels()){
+                nextFallingStar.startTimer(CAST_NEXT_FALLING_STAR);
+                cycle.startTimer(500);
+                stage = DISPLAY_STAR;
+            }
         }
-
-        if (chooseNewStar.isTimerReady())
-        {
-            stage = CHOOSE;
-        }
-        //Serial.println("Brightness of star: " + String(brightnessOfChosenStar));
-
+        cycle.startTimer(random(10,50));
+        
         break;
     }
 }
 
-// change to a target brightness
-void StarLight::gotoBrightness()
-{
-    int16_t actBrightness = (int16_t)brightnessOfChosenStar;
-    if (targetBrightnessOfChosenStar > brightnessOfChosenStar)
+//Choses one of four falling star types
+uint32_t* StarLight::chooseFallingStar(){
+    uint8_t randomStar = random(0,3);
+    switch (randomStar)
     {
-        actBrightness += BRIGHTNESS_STEP;
-        if (actBrightness > targetBrightnessOfChosenStar)
-            brightnessOfChosenStar = targetBrightnessOfChosenStar;
-        else
-            brightnessOfChosenStar = actBrightness;
-    }
-    else if (targetBrightnessOfChosenStar < brightnessOfChosenStar)
-    {
-        actBrightness -= BRIGHTNESS_STEP;
-        if (actBrightness < targetBrightnessOfChosenStar)
-            brightnessOfChosenStar = targetBrightnessOfChosenStar;
-        else
-            brightnessOfChosenStar = (uint8_t)actBrightness;
-    }
-    //Refreshes the stripe
-    switch (_pController->getLedMode())
-    {
-    case RGB:
-        _pController->setPixelColor(starPositions[chosenStar], _pController->Color(brightnessOfChosenStar, brightnessOfChosenStar, brightnessOfChosenStar));
+    case 0:
+        return &blueFallingStar[0];
         break;
-    case RGBW:
-        _pController->setPixelColor(starPositions[chosenStar], _pController->Color(0, 0, 0, brightnessOfChosenStar));
+    case 1:
+        return &orangeFallingStar[0];
+        break;
+    case 2:
+        return &rainbowFallingStar[0];
+        break;
+    case 3:
+        if(_pController->getLedMode() == RGB){
+            return &whiteFallingStar[0];
+        }
+        else
+        {
+            return &whiteFallingStarRGBW[0];
+        }
+        
         break;
     }
-
-    _pController->show();
 }
 
+//Choses in which direction a star will be casted
+MoveDirection StarLight::chooseFrameDirection(){
+    uint8_t tmp = random(1,10);
+    if(tmp % 2 >= 1){
+        framePosition = 0;
+        return RIGHT_TO_LEFT;
+    }else
+    {
+        framePosition = _pController->numPixels();
+        return LEFT_TO_RIGHT;
+    }
+}
+
+//Will be executed be the processIRData() method in main.cpp
+//so the states will be reset after a the animation was started
 void StarLight::resetStateMachine()
 {
-    stage = INIT;
+    stage = GENERATE_STARS;
 }
 
 void StarLight::loop()
@@ -124,6 +142,5 @@ void StarLight::loop()
     if (cycle.isTimerReady())
     {
         starLightStage();
-        cycle.startTimer(100);
     }
 }

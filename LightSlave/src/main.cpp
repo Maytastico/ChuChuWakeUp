@@ -103,16 +103,15 @@ void processIRData(void);
 
 void loop()
 {
+  // if (debug.isTimerReady())
+  // {
+  //   Serial.println(memory.getSavedProgram());
+  //   Serial.println(manager.getCurrentProgram());
+  //   Serial.println(String(memory.getSavedBrightness()));
+  //   Serial.println(String(memory.getSavedColor()));
 
-  if (debug.isTimerReady())
-  {
-    Serial.println(memory.getSavedProgram());
-    Serial.println(manager.getCurrentProgram());
-    Serial.println(String(memory.getSavedBrightness()));
-    Serial.println(String(memory.getSavedColor()));
-
-    debug.startTimer(1000);
-  }
+  //   debug.startTimer(1000);
+  // }
 
   // receive and decode IR data
   if (irReceiver.isDataReady())
@@ -164,7 +163,7 @@ void processIRData()
 
   switch (data)
   {
-    //Controle Stripe
+    //Control Stripe
 
   case BRIGHT_DOWN:
     // decrease brightness, after 5s store value to EEPROM

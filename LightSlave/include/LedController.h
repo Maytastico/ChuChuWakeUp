@@ -204,6 +204,15 @@ public:
      */
     uint8_t generateRadomPosition();
 
+    /**
+     * @brief Shows an array on the stripe
+     * 
+     * @param frame 
+     * @param frameElements 
+     * @param position 
+     */
+    void displayArray(uint32_t *frame, uint8_t frameElements, int position, boolean override);
+
     //Setter
     /**
      * @brief Sets the status of the instance that decides whether 
