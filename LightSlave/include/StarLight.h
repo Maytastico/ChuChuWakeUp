@@ -78,12 +78,14 @@ private:
      * 
      */
     uint32_t blueFallingStar [8] = {_pController->Color(255,255,255), _pController->Color(51, 204, 255), _pController->Color(0, 102, 255), _pController->Color(0, 51, 204), _pController->Color(0, 0, 153), 0,0,0};
+     uint32_t blueFallingStarM [8] = {0,0,0, _pController->Color(0, 0, 153), _pController->Color(0, 51, 204),_pController->Color(0, 102, 255),_pController->Color(51, 204, 255),_pController->Color(255,255,255)};
 
     /**
      * @brief Displays a falling star that is yellow at the front at red at the end
      * 
      */
     uint32_t orangeFallingStar [8] = {_pController->Color(255,255,0), _pController->Color(255,232,0),_pController->Color(255,162,0),_pController->Color(255,139,0),_pController->Color(255,116,0),_pController->Color(255,93,0),_pController->Color(255,0,0),_pController->Color(128,0,0)};
+    uint32_t orangeFallingStarM [8] = {_pController->Color(128,0,0),_pController->Color(255,0,0),_pController->Color(255,93,0),_pController->Color(255,116,0),_pController->Color(255,139,0),_pController->Color(255,162,0), _pController->Color(255,232,0),_pController->Color(255,255,0)};
 
     /**
      * @brief Displays a falling star with rainbow colors

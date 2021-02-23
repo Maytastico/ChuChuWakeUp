@@ -56,9 +56,9 @@ void StarLight::starLightStage()
         cycle.startTimer(500);
 
         if(nextFallingStar.isTimerReady()){
-            stage = CAST_FALLING_STAR; 
-            choosenType = chooseFallingStar(); 
+            stage = CAST_FALLING_STAR;
             directionFrame = chooseFrameDirection();
+            choosenType = chooseFallingStar(); 
         }
         else if(generateNewStars.isTimerReady()){ 
             stage = GENERATE_STARS; 
@@ -92,14 +92,22 @@ void StarLight::starLightStage()
 
 //Choses one of four falling star types
 uint32_t* StarLight::chooseFallingStar(){
-    uint8_t randomStar = random(0,3);
+    uint8_t randomStar = random(0,4);
     switch (randomStar)
     {
     case 0:
-        return &blueFallingStar[0];
+        if(directionFrame == LEFT_TO_RIGHT){
+            return &blueFallingStar[0];
+        }else{
+            return &blueFallingStarM[0];
+        }
         break;
     case 1:
-        return &orangeFallingStar[0];
+        if(directionFrame == LEFT_TO_RIGHT){
+            return &orangeFallingStar[0];
+        }else{
+            return &orangeFallingStarM[0];
+        }
         break;
     case 2:
         return &rainbowFallingStar[0];
